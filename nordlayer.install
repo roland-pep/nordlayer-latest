@@ -1,5 +1,5 @@
 VAR_LIB=/var/lib/nordlayer
-NORDLAYER_RESOLVCONF=/usr/bin/nordlayer-resolvconf
+NORDLAYER_RESOLVCONF=/usr/libexec/nordlayer/nordlayer-resolvconf
 
 post_install() {
 
@@ -22,7 +22,8 @@ post_install() {
 
   chown root:nordlayer-resolve ${NORDLAYER_RESOLVCONF}
   chmod 4750 ${NORDLAYER_RESOLVCONF}
-
+  # Ensure nordlayer-resolvconf has execute permissions
+  chmod +x ${NORDLAYER_RESOLVCONF}
   # Reload config
   systemctl daemon-reload
 
