@@ -1,26 +1,59 @@
-# Maintainer: Deividas Gedgaudas <sidicer at gmail dot com>
-
+# Maintainer: Roland Kiraly <rolandgyulakiraly at outlook dot com>
+# https://github.com/raverecursion/nordlayer-latest/tree/master
 pkgname=nordlayer
-pkgver=3.1.0
-pkgrel=0
-pkgdesc="Proprietary VPN client for linux"
-arch=('i686' 'x86_64')
+pkgver=3.2.2
+pkgrel=1
+pkgdesc="Proprietary VPN client for Linux"
+arch=('x86_64')
 url="https://nordlayer.com"
-license=('custom')
+license=('custom:commercial')
 replaces=('nordvpnteams-bin')
 conflicts=('nordvpnteams-bin')
-depends=('bash')
-#backup=('etc/default/nordlayer' 'etc/nordlayer/config.hcl' 'etc/nordlayer/ipsec.secrets')
+depends=('bash' 'libgcrypt' 'libgpg-error' 'libcap' 'hicolor-icon-theme' 'gmp')
 options=('!strip' '!emptydirs')
 install=${pkgname}.install
-source_x86_64=("https://downloads.nordlayer.com/linux/latest/debian/pool/main/${pkgname}_${pkgver}_amd64.deb")
-sha512sums_x86_64=('8e8f369db2bd6ada11564ab8be06f9faa6efa1a11f324956698c3b8b2da8a489ca685ed68e4e775e05e17e363a661f0af6e5c05d6d3cff76ed83e032ef815cdb')
+source_x86_64=("https://downloads.nordlayer.com/linux/latest/debian/pool/main/nordlayer_${pkgver}_amd64.deb")
+sha512sums_x86_64=('f076ae853fb87941d1bc8c7cd34c31d233343a86b1d6b123353c328fda3fd938b7e38741ba1399f63eb2cdda990ddf460fde25e035eb810ea0c3d7de7e5303b2')
 
-package(){
-	# Extract package data
-	#tar xzf data.tar.gz -C "${pkgdir}"
-	bsdtar -O -xf *.deb data.tar.gz | bsdtar -C "${pkgdir}" -xJf -
-    cp -r "${pkgdir}/usr/sbin/." "${pkgdir}/usr/bin"
-    sed -i 's+sbin+bin+g' "${pkgdir}/usr/lib/systemd/system/nordlayer.service"
-    rm -r "${pkgdir}/usr/sbin"
+prepare() {
+    cd "${srcdir}"
+    ar x "nordlayer_${pkgver}_amd64.deb"
+    tar -xf data.tar.gz -C "${srcdir}" || tar -xf data.tar.xz -C "${srcdir}" || tar -xf data.tar.bz2 -C "${srcdir}" || tar -xf data.tar -C "${srcdir}"
+}
+
+package() {
+    cd "${srcdir}"
+    mkdir -p "${pkgdir}"
+
+    # Copy all necessary directories and files
+    cp -r etc "${pkgdir}/"
+    cp -r usr "${pkgdir}/"
+    cp -r var "${pkgdir}/"
+
+    # Move /usr/sbin/nordlayerd to /usr/bin
+    if [ -f "${pkgdir}/usr/sbin/nordlayerd" ]; then
+        mkdir -p "${pkgdir}/usr/bin"
+        mv "${pkgdir}/usr/sbin/nordlayerd" "${pkgdir}/usr/bin/nordlayerd"
+        rm -rf "${pkgdir}/usr/sbin"
+    fi
+
+    # Fix the systemd service file to point to the correct executable path
+    sed -i 's|ExecStart=/usr/sbin/nordlayerd|ExecStart=/usr/bin/nordlayerd|' "${pkgdir}/usr/lib/systemd/system/nordlayer.service"
+
+    # Ensure the necessary directories exist and have the correct permissions
+    install -d -m 0755 "${pkgdir}/run/nordlayer"
+    chown -R nordlayer:nordlayer "${pkgdir}/run/nordlayer"
+
+    # Set permissions for executable files
+    chmod 755 "${pkgdir}/usr/bin/nordlayer"
+    chmod 755 "${pkgdir}/usr/bin/nordlayerd"
+    chmod 755 "${pkgdir}/usr/libexec/nordlayer/nordlayer-charon"
+    chmod 755 "${pkgdir}/usr/libexec/nordlayer/nordlayer-ip"
+    chmod 755 "${pkgdir}/usr/libexec/nordlayer/nordlayer-openvpn"
+    chmod 755 "${pkgdir}/usr/libexec/nordlayer/nordlayer-resolvconf"
+    chmod 755 "${pkgdir}/usr/libexec/nordlayer/nordlayer-setcap"
+
+    # Log the final contents for debugging
+    echo "Final contents in ${pkgdir}:"
+    find "${pkgdir}"
 }
