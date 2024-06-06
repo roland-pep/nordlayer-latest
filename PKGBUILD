@@ -1,6 +1,5 @@
 # Maintainer: Roland Kiraly <rolandgyulakiraly at outlook dot com>
 # https://github.com/raverecursion/nordlayer-latest/tree/master
-
 pkgname=nordlayer-bin
 pkgver=3.2.2
 pkgrel=1
