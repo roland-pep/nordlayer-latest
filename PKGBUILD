@@ -1,26 +1,31 @@
-# Maintainer: Deividas Gedgaudas <sidicer at gmail dot com>
-
-pkgname=nordlayer
-pkgver=3.1.0
-pkgrel=0
-pkgdesc="Proprietary VPN client for linux"
-arch=('i686' 'x86_64')
+# Maintainer: Roland Kiraly <rolandgyulakiraly at outlook dot com>
+# https://github.com/raverecursion/nordlayer-latest/tree/master
+pkgname=nordlayer-bin
+pkgver=3.2.2
+pkgrel=1
+pkgdesc="Proprietary VPN client for Linux"
+arch=('x86_64')
 url="https://nordlayer.com"
-license=('custom')
+license=('custom:commercial')
 replaces=('nordvpnteams-bin')
 conflicts=('nordvpnteams-bin')
-depends=('bash')
-#backup=('etc/default/nordlayer' 'etc/nordlayer/config.hcl' 'etc/nordlayer/ipsec.secrets')
+depends=('bash' 'libgcrypt' 'libgpg-error' 'libcap' 'hicolor-icon-theme' 'gmp')
 options=('!strip' '!emptydirs')
 install=${pkgname}.install
-source_x86_64=("https://downloads.nordlayer.com/linux/latest/debian/pool/main/${pkgname}_${pkgver}_amd64.deb")
-sha512sums_x86_64=('8e8f369db2bd6ada11564ab8be06f9faa6efa1a11f324956698c3b8b2da8a489ca685ed68e4e775e05e17e363a661f0af6e5c05d6d3cff76ed83e032ef815cdb')
+source_x86_64=("https://downloads.nordlayer.com/linux/latest/debian/pool/main/nordlayer_${pkgver}_amd64.deb")
+sha512sums_x86_64=('f076ae853fb87941d1bc8c7cd34c31d233343a86b1d6b123353c328fda3fd938b7e38741ba1399f63eb2cdda990ddf460fde25e035eb810ea0c3d7de7e5303b2')
 
-package(){
-	# Extract package data
-	#tar xzf data.tar.gz -C "${pkgdir}"
-	bsdtar -O -xf *.deb data.tar.gz | bsdtar -C "${pkgdir}" -xJf -
-    cp -r "${pkgdir}/usr/sbin/." "${pkgdir}/usr/bin"
-    sed -i 's+sbin+bin+g' "${pkgdir}/usr/lib/systemd/system/nordlayer.service"
+package() {
+    cd "${srcdir}"
+    # Extract the data.tar.xz from the .deb file and then extract it into the pkgdir
+    bsdtar -Oxf "${source_x86_64[0]}" data.tar.xz | bsdtar -C "${pkgdir}" -xJf -
+
+    # Move sbin binaries to bin
+    mv "${pkgdir}/usr/sbin"/* "${pkgdir}/usr/bin"
+
+    # Update the systemd service file to point to /usr/bin instead of /usr/sbin
+    sed -i 's+/usr/sbin+/usr/bin+g' "${pkgdir}/usr/lib/systemd/system/nordlayer.service"
+
+    # Remove the now-empty sbin directory
     rm -r "${pkgdir}/usr/sbin"
 }

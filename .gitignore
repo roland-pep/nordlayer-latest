@@ -1,6 +1,17 @@
-.idea
-pkg
-nordlayer-*
-nordlayer_*
-pkg
-src
+# Ignore binary packages
+*.pkg.tar.zst
+*.deb
+
+# Ignore source directory
+/src/
+/pkg/
+
+# Ignore backup and temporary files
+*~
+.*.swp
+.DS_Store
+
+# Ignore build files
+build/
+tmp/
+log/
